@@ -21,13 +21,13 @@ To implement admission control rules that validate Kubernetes resources during c
 
 Start minikube:
 
-```bash
+```command
 minikube start
 ```
 
 Make sure that the minikube ingress addon is enabled:
 
-```bash
+```command
 minikube addons enable ingress
 ```
 
@@ -35,13 +35,13 @@ minikube addons enable ingress
 
 When OPA is deployed on top of Kubernetes, policies are automatically loaded out of ConfigMaps in the `opa` namespace.
 
-```bash
+```command
 kubectl create namespace opa
 ```
 
 Configure `kubectl` to use this namespace:
 
-```bash
+```command
 kubectl config set-context opa-tutorial --user minikube --cluster minikube --namespace opa
 kubectl config use-context opa-tutorial
 ```
@@ -50,14 +50,14 @@ kubectl config use-context opa-tutorial
 
 Communication between Kubernetes and OPA must be secured using TLS. To configure TLS, use `openssl` to create a certificate authority (CA) and certificate/key pair for OPA:
 
-```bash
+```command
 openssl genrsa -out ca.key 2048
 openssl req -x509 -new -nodes -key ca.key -days 100000 -out ca.crt -subj "/CN=admission_ca"
 ```
 
 Generate the TLS key and certificate for OPA:
 
-```bash
+```command
 cat >server.conf <<EOF
 [req]
 req_extensions = v3_req
@@ -70,7 +70,7 @@ extendedKeyUsage = clientAuth, serverAuth
 EOF
 ```
 
-```bash
+```command
 openssl genrsa -out server.key 2048
 openssl req -new -key server.key -out server.csr -subj "/CN=opa.opa.svc" -config server.conf
 openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 100000 -extensions v3_req -extfile server.conf
@@ -80,7 +80,7 @@ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out s
 
 Create a Secret to store the TLS credentials for OPA:
 
-```bash
+```command
 kubectl create secret tls opa-server --cert=server.crt --key=server.key
 ```
 
@@ -89,7 +89,7 @@ Next, use the file below to deploy OPA as an admission controller.
 **[admission-controller.yaml](https://github.com/open-policy-agent/opa/blob/master/docs/book/tutorials/kubernetes-admission-control-validation/admission-controller.yaml)**:
 <pre><code class="lang-yaml">{% include "./tutorials/kubernetes-admission-control-validation/admission-controller.yaml" %}</code></pre>
 
-```bash
+```command
 kubectl apply -f admission-controller.yaml
 ```
 
@@ -97,7 +97,7 @@ When OPA starts, the `kube-mgmt` container will load Kubernetes Namespace and In
 
 Next, generate the manifest that will be used to register OPA as an admission controller:
 
-```bash
+```command
 cat > webhook-configuration.yaml <<EOF
 kind: ValidatingWebhookConfiguration
 apiVersion: admissionregistration.k8s.io/v1beta1
@@ -122,7 +122,7 @@ The generated configuration file inclues a base64 encoded representation of the 
 
 Finally, register OPA as and admission controller:
 
-```bash
+```command
 kubectl apply -f webhook-configuration.yaml
 ```
 
@@ -140,7 +140,7 @@ To test admission control, create a policy that restricts the hostnames that an 
 
 Store the policy in Kubernetes as a ConfigMap. By default kube-mgmt will try to load policies out of configmaps in the opa namespace OR configmaps in other namespaces labelled openpolicyagent.org/policy=rego.
 
-```bash
+```command
 kubectl create configmap ingress-whitelist --from-file=ingress-whitelist.rego
 ```
 
@@ -172,7 +172,7 @@ metadata:
   name: production
 ```
 
-```bash
+```command
 kubectl create -f qa-namespace.yaml
 kubectl create -f production-namespace.yaml
 ```
@@ -216,7 +216,7 @@ spec:
 
 Finally, try to create both Ingress objects:
 
-```bash
+```command
 kubectl create -f ingress-ok.yaml -n production
 kubectl create -f ingress-bad.yaml -n qa
 ```
@@ -233,7 +233,7 @@ To enforce the second half of the policy from the start of this tutorial you can
 
 <pre><code class="lang-ruby">{% include "./tutorials/kubernetes-admission-control-validation/ingress-conflicts.rego" %}</code></pre>
 
-```bash
+```command
 kubectl create configmap ingress-conflicts --from-file=ingress-conflicts.rego
 ```
 
@@ -257,11 +257,11 @@ metadata:
   name: staging
  ```
 
-```bash
+```command
 kubectl create -f staging-namespace.yaml
 ```
 
-```bash
+```command
 kubectl create -f ingress-ok.yaml -n staging
 ```
 
